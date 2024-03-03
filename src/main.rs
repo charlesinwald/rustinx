@@ -40,6 +40,38 @@ fn monitor_nginx_error_log(path: &str, tx: mpsc::Sender<String>) -> std::io::Res
     }
 }
 
+use std::process::Command;
+
+fn get_nginx_resource_usage() -> Result<(f32, f32), Box<dyn std::error::Error>> {
+    let output = Command::new("ps")
+        .args(&["-C", "nginx", "-o", "%cpu,%mem"])
+        .output()?;
+
+    let output_str = String::from_utf8_lossy(&output.stdout);
+    let mut cpu_usage = 0.0;
+    let mut mem_usage = 0.0;
+    let mut count = 0;
+
+    for line in output_str.lines().skip(1) {
+        // Skip the header line
+        let parts: Vec<&str> = line.trim().split_whitespace().collect();
+        if parts.len() == 2 {
+            if let (Ok(cpu), Ok(mem)) = (parts[0].parse::<f32>(), parts[1].parse::<f32>()) {
+                cpu_usage += cpu;
+                mem_usage += mem;
+                count += 1;
+            }
+        }
+    }
+
+    if count > 0 {
+        cpu_usage /= count as f32;
+        mem_usage /= count as f32;
+    }
+
+    Ok((cpu_usage, mem_usage))
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     // Check if the current user is root
     if unsafe { geteuid() == 0 } {
@@ -64,7 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         monitor_nginx_error_log(log_path, tx)
             .unwrap_or_else(|e| eprintln!("Log monitoring error: {}", e));
     });
-    let mut log_lines: VecDeque<String> = VecDeque::with_capacity(10);
+    let mut log_lines: VecDeque<String> = VecDeque::with_capacity(12);
 
     let server_name = matches.value_of("server-name").unwrap(); // Safely unwrap because it's required
 
@@ -106,10 +138,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             .output()?
             .stdout;
         let pid = String::from_utf8_lossy(&(pid_out));
+        let (cpu_usage, mem_usage) = get_nginx_resource_usage()?;
 
         let output_str = format!(
-            "Monitoring server: {}\nNginx version: {}PID: {}\n{}",
-            server_name, nginx_version, pid, combined_output
+            "Monitoring server: {}\nNginx version: {}PID: {}\nCPU Usage: {}\nRAM Usage: {}\n{}",
+            server_name, nginx_version, pid, cpu_usage, mem_usage, combined_output
         );
 
         terminal.draw(|f| {
@@ -119,8 +152,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .margin(1)
                 .constraints(
                     [
-                        Constraint::Percentage(50), // First box takes half the space
-                        Constraint::Percentage(50), // Second box takes the remaining space
+                        Constraint::Percentage(30), // First box takes half the space
+                        Constraint::Percentage(70), // Second box takes the remaining space
                     ]
                     .as_ref(),
                 )
@@ -146,9 +179,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .collect::<Vec<String>>()
                 .join("\n");
 
-            let other_info_block = Block::default().title("Logs").borders(Borders::ALL);
-            let other_info_paragraph = Paragraph::new(log_display).block(other_info_block);
-            f.render_widget(other_info_paragraph, chunks[1]); // Render in the second section
+            let logs_block = Block::default().title("Logs").borders(Borders::ALL);
+            let logs_paragraph = Paragraph::new(log_display).block(logs_block);
+            f.render_widget(logs_paragraph, chunks[1]); // Render in the second section
         })?;
 
         // Sleep for a fixed interval before the next update.
