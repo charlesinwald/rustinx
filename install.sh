@@ -2,7 +2,7 @@
 
 # Replace this URL with the actual URL of your rustinx binary release
 # REMEMBER TO UPDATE THE VERSION NUMBER IN THE URL
-DOWNLOAD_URL="https://github.com/charlesinwald/rustinx/releases/download/1.00/rustinx"
+DOWNLOAD_URL="https://github.com/charlesinwald/rustinx/releases/download/1.0.0/rustinx"
 
 INSTALL_DIR="$HOME/.local/bin"
 BIN_NAME="rustinx"
