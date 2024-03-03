@@ -1,0 +1,1 @@
+curl -sSL -o install_rustinx.sh https://raw.githubusercontent.com/charlesinwald/rustinx/master/install.sh && chmod +x install_rustinx.sh && ./install_rustinx.sh
