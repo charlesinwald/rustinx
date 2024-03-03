@@ -3,11 +3,11 @@ use crossterm::{
     cursor::{Hide, Show},
     event::{self, KeyCode},
     execute,
-    terminal::{self, disable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{self, disable_raw_mode, EnterAlternateScreen},
     ExecutableCommand,
 };
 use nix::libc::geteuid;
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader};
 use std::sync::mpsc::{self, Receiver};
 use std::{collections::VecDeque, fs::File};
 use std::{error::Error, process, thread};
@@ -187,5 +187,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Sleep for a fixed interval before the next update.
         thread::sleep(Duration::from_secs(1));
     }
+    terminal.backend_mut().execute(Show)?;
+    terminal
+        .backend_mut()
+        .execute(terminal::LeaveAlternateScreen)?;
+    disable_raw_mode()?;
     Ok(())
 }
