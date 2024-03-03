@@ -1,0 +1,16 @@
+[package]
+name = "rustinx"
+version = "0.1.0"
+edition = "2021"
+
+
+
+[dependencies]
+tui = {version = "*", features = ["crossterm"]}
+crossterm = "*"
+clap = "3.0"
+regex = "1"
+serde_json = "1.0"
+rayon = "1.5"
+tokio = { version = "1.0", features = ["full"] }
+nix = "0.28.0"
