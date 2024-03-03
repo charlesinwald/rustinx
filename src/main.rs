@@ -1,4 +1,3 @@
-use clap::{App, Arg};
 use crossterm::{
     cursor::{Hide, Show},
     event::{self, KeyCode},
@@ -80,14 +79,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("This program needs to be run as root. Please use sudo.");
         process::exit(1); // Exit if not root
     }
-    let matches = App::new("Nginx Monitor")
-        .arg(
-            Arg::new("server-name")
-                .required(true)
-                .help("Name of the nginx server to monitor"),
-        )
-        // Add other arguments as required
-        .get_matches();
 
     let (tx, rx): (mpsc::Sender<String>, Receiver<String>) = mpsc::channel();
     // Start the log monitoring thread
@@ -97,8 +88,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             .unwrap_or_else(|e| eprintln!("Log monitoring error: {}", e));
     });
     let mut log_lines: VecDeque<String> = VecDeque::with_capacity(12);
-
-    let server_name = matches.value_of("server-name").unwrap(); // Safely unwrap because it's required
 
     let mut stdout = io::stdout().lock();
 
@@ -141,8 +130,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         let (cpu_usage, mem_usage) = get_nginx_resource_usage()?;
 
         let output_str = format!(
-            "Monitoring server: {}\nNginx version: {}PID: {}\nCPU Usage: {}\nRAM Usage: {}\n{}",
-            server_name, nginx_version, pid, cpu_usage, mem_usage, combined_output
+            "Nginx version: {}PID: {}\nCPU Usage: {}\nRAM Usage: {}\n{}",
+            nginx_version, pid, cpu_usage, mem_usage, combined_output
         );
 
         terminal.draw(|f| {
