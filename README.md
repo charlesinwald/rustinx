@@ -4,6 +4,8 @@
 
 Rustinx is a terminal-based monitoring tool designed specifically for Nginx servers. It provides real-time insights into Nginx's error logs, configuration status, and resource usage including CPU and memory. Built with Rust, leveraging crossterm for terminal graphics and tokio for asynchronous operations, Rustinx offers an efficient and user-friendly interface for server administrators.
 
+![catop screenshot](https://i.imgur.com/fhHo0Sk.png)
+
 ## Features
 
 - **Real-Time Error Log Monitoring**: Monitors the Nginx error log file and displays new log entries in real-time.
